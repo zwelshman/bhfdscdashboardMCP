@@ -89,14 +89,162 @@ Here are the Wales datasets related to primary care found in the TRE dashboard:
 ### `explore_dataset`
 > **User:** "Using bhfdscdashboardMCP Show me details about WLGP dataset in Wales"
 
+**Response**
+Here are the details for the **Welsh Longitudinal General Practice (WLGP)** dataset in Wales (data archived 11/01/2024):
+
+## Overview
+
+| Metric | Value |
+|---|---|
+| Dataset | Welsh Longitudinal General Practice |
+| Total records | **4,188,850,940** (~4.19 billion) |
+| Records with ID | 4,183,859,725 (99.9%) |
+| Distinct patients | **5,058,570** (~5.06 million) |
+
+## Coverage
+
+The coverage table shows the earliest date groups in the dataset. The bulk of the 4.19B records sit in recent years, but the returned rows highlight the historical tail:
+
+| Date group | Records | Distinct patients |
+|---|---|---|
+| 101 (anomalous) | 2,057,630 | 712,005 |
+| 1800-01 | 48,540 | 13,750 |
+| 1800-02 → 1877-03 | ~10 each | ~10 each |
+
+The pre-1900 entries (10–48K records each) are almost certainly data-quality anomalies or placeholder dates rather than genuine GP interactions — consistent with the dataset's stated start date of January 1950.
+
+## Field Completeness (21 columns)
+
+**Fully complete (100%):** ALF_STS_CD, GNDR_CD, WOB, PRAC_CD_E, LOCAL_NUM_E, EVENT_CD_VRS, EVENT_DT, EPISODE, SEQUENCE, DELTA_KEY, EVENT_YR, CREATE_DT, AVAIL_FROM_DT, SOURCE_EXTRACT
+
+**Near-complete (99%+):** REG_CAT_CD (99.99999%), LSOA_CD (99.71%), EVENT_CD (99.28%)
+
+**Low completeness:**
+- EVENT_VAL — **48.55%** (the clinical value field is only populated for about half of events)
+- ALF_MTCH_PCT — **0.29%**
+- BATCH_NUM — **0.22%**
+
+## Data Dictionary
+
+The data dictionary for WLGP is currently **empty** in the dashboard export (no field definitions available).
+
+**Key takeaway:** WLGP is a massive longitudinal dataset — 4.19 billion events across 5.06 million patients since 1950. Core identifiers, demographics, and event dates are essentially complete, but the clinical value field (EVENT_VAL) is only ~49% populated, which matters for analyses relying on test results or measurements.
+
 ### `explore_data_dictionary`
 > **User:** "Using bhfdscdashboardMCP Show me the data dictionary for Scotland"
 
+**Response**:
+Here's the data dictionary situation for **Scotland** in the TRE dashboard:
+
+## Data Dictionary Availability
+
+The formal data dictionaries are **not available** for Scotland datasets in this dashboard export (archived 2023-08-11). The dashboard flags each dataset's dictionary status:
+
+| Dataset | Dictionary available? | Reason |
+|---|---|---|
+| ECOSS | ⚠️ Flagged | "This dataset has been archived and we do not currently hold an archived data dictionary" |
+| Vaccination | ⚠️ Flagged | "Data dictionary currently unavailable for this dataset" |
+| SICSAG Daily / SICSAG Episodes | ⚠️ Flagged | "Data dictionary currently unavailable for this dataset" |
+| Renal Registry | ⚠️ Flagged | "Data dictionary currently unavailable for this dataset" |
+| All others (SMR00, SMR01, A&E, Deaths, PIS, SSCA, Diabetes, etc.) | ❌ No dictionary | — |
+
+## Closest Alternative: Field-Level Completeness (column names per dataset)
+
+While formal dictionaries are missing, the dashboard does export **column names with completeness** for 16 Scotland datasets — effectively a field list:
+
+| Dataset | Columns | Example fields |
+|---|---|---|
+| **SMR01** (inpatient) | 56 | anon_id, sex, age, date_of_birth, admission_date, admission_type, location |
+| **SMR00** (outpatient) | 55 | clinic_date, clinic_attendance, specialty, patient_category |
+| **A&E** | 52 | arrival_date_time, discharge_date_time, attendance_category_code |
+| **PIS dispensed** | 47 | prescribed_date, dispensed_date, paid_date, care_home_indicator |
+| **PIS paid** | 45 | age_at_paid_date, paid_gic_excl_bb |
+| **PIS prescribed** | 44 | prescription_line_no, age_at_prescribed_date, no_items |
+| **SSCA** (stroke) | 38 | q3_admitting_hospital, q22_inpt_brain_imaging_done, q33a_pt_managed_in_asu |
+| **Deaths** | 36 | marital_status, date_of_death, post_mortem_indicator |
+| **Diabetes Covs** | 27 | diabetes_type, on_insulin, on_sglt2i, on_dpp4i |
+| **ECOSS** | 29 | health_board, specimen_date, original_organism |
+| **Covid Tests (L&ECOSS)** | 28 | test_result, test_type, ecoss_submitting_laboratory |
+| **COG-UK** | 23 | lineage, pillar_2, sample_date, epi_week |
+| **Vaccination** | 16 | vacc_dose_number, age_at_vacc, vacc_data_source |
+| **SICSAG Episodes** | 15 | admitunit, admittime, disctime, destination, level |
+| **SICSAG Daily** | 8 | haemofilt, inotrope, advanced_ventilation_derived |
+
+**Key takeaway:** Formal data dictionaries aren't held for Scotland datasets in this dashboard — for full field definitions you'd need the [Public Health Scotland National Data Catalogue](https://publichealthscotland.scot/resources-and-tools/health-intelligence-and-data-management/national-data-catalogue/) or the HDR UK Gateway links per dataset. The completeness export does give you the complete column list per dataset, which I can show in full for any specific dataset if useful.
+
 ### `view_coverage`
-> **User:** "Using bhfdscdashboardMCP Show coverage for GDPPR in England"
+> **User:** "Using bhfdscdashboardMCP Show total coverage for GDPPR in England"
+
+**Response:**
+Here's the total coverage for **GDPPR (GP Data – Planned Record)** in **England** (archived 2025-11-04):
+
+## Overall Totals
+
+| Metric | Value |
+|---|---|
+| **Total records** | **16,256,613,230** (~16.26 billion) |
+| Records with ID | 16,256,613,230 (100%) |
+| Max distinct patients in a single month | 33,890,110 (~33.9M — consistent with the England population) |
+| Date groups | 1,841 monthly buckets |
+
+## Coverage Range
+
+- **Plausible range:** January 1900 → December 2030 (1,557 monthly groups holding 16.25B records)
+- **Anomalous dates:** 283 groups (1760–1900 and 2031–2919) holding only ~77,525 records — clearly data-quality artifacts (placeholder/typo dates), not real GP records
+- **Null date group:** 5,240,520 records with no date
+
+## Records by Year (recent)
+
+| Year | Records |
+|---|---|
+| 2021 | 2.04 billion |
+| 2022 | 2.18 billion |
+| 2023 | 2.26 billion |
+| 2024 | 2.04 billion |
+| 2025 | 1.40 billion (partial year at archive date) |
+| 2026+ | negligible (anomalous future dates) |
+
+## Peak Months
+
+| Month | Records | Distinct patients |
+|---|---|---|
+| 2023-03 | 207.5M | 22.0M |
+| 2023-10 | 206.8M | 23.8M |
+| 2022-10 | 206.2M | 24.9M |
+| 2022-11 | 202.5M | 23.7M |
+| 2024-10 | 197.2M | 24.6M |
+
+**Key takeaway:** GDPPR is the largest dataset in the England TRE at ~16.3 billion records, with monthly extracts covering ~22–25 million distinct patients per month. Coverage is effectively continuous from 1900 onward (with the bulk of data from 2021–2025), though a small number of records carry implausible dates that should be excluded in analysis.
 
 ### `view_completeness`
-> **User:** "Using bhfdscdashboardMCP Show completeness for pedew diagnosis table."
+> **User:** "Using bhfdscdashboardMCP Show completeness for PEDW diagnosis table."
+
+**Response**:
+The **Patient Episode Database for Wales (PEDW)**. The diagnosis table is **"Patient Episode Datbase for Wales (Diagnostic codes)"** (archived 2024-01-11):
+
+## PEDW — Diagnostic Codes Table Completeness (10 columns)
+
+| Column | Completeness |
+|---|---|
+| PROV_UNIT_CD (provider unit) | 100.00% |
+| EPI_NUM (episode number) | 100.00% |
+| DIAG_NUM (diagnosis position) | 100.00% |
+| DIAG_CD_123 (diagnosis code, 3-char) | 100.00% |
+| DIAG_CD_1234 (diagnosis code, 4-char) | 100.00% |
+| DIAG_CD (diagnosis code) | 100.00% |
+| AVAIL_FROM_DT (availability date) | 100.00% |
+| SPELL_NUM_E (spell number) | 100.00% |
+| DIAG_CD_4 (4th diagnosis position) | 99.93% |
+| **DIAG_CD_56 (5th–6th diagnosis positions)** | **6.09%** |
+
+## For Context: PEDW Spells Table (main episode table, 50 columns)
+
+Core fields are essentially complete: admission/discharge dates and methods, provider, specialty, spell/episode numbers, gender (99.70%), LSOA geography (98.6–99.3%), ethnicity code (88.24%).
+
+Weaker fields: admission decision date (80.81%), HRG cost/code fields (51–56%), duration of elective wait (45.64%), and ALF_MTCH_PCT (1.09%).
+
+**Key takeaway:** The PEDW diagnosis table is in excellent shape — primary diagnosis codes (positions 1–4) are ~100% populated. The only sparse field is DIAG_CD_56 (5th/6th diagnosis positions at 6.09%), which is expected since most episodes don't extend that far into secondary diagnoses.
+
 
 ## Data Files Available
 
@@ -104,12 +252,12 @@ The following data files are available in the `data/` directory:
 
 | File | Description |
 |------|-------------|
-| `20240624_SDE_DD_391419_j3w9t.xlsx` | SDE Data Dictionary |
+| `DD_England.xlsx` | SDE Data Dictionary |
 | `DD_Scotland.xlsx` | Scotland Data Dictionary |
 | `DD_Wales.xlsx` | Wales Data Dictionary |
-| `export_dashboard_SAIL_20240111_data_completeness.csv` | SAIL Completeness Data |
-| `export_dashboard_SAIL_20240111_data_coverage.csv` | SAIL Coverage Data |
-| `export_dashboard_SAIL_20240111_data_overview.csv` | SAIL Overview Data |
+| `export_dashboard_WALES_20240111_data_completeness.csv` | SAIL Completeness Data |
+| `export_dashboard_WALES_20240111_data_coverage.csv` | SAIL Coverage Data |
+| `export_dashboard_WALES_20240111_data_overview.csv` | SAIL Overview Data |
 | `export_dashboard_england_20251104_data_completeness.csv` | England Completeness Data |
 | `export_dashboard_england_20251104_data_coverage.csv` | England Coverage Data |
 | `export_dashboard_england_20251104_data_overall.csv` | England Overall Data |
@@ -133,10 +281,4 @@ The server will be available for tool calls via the MCP protocol.
 
 ## Summary
 
-The BHF DSC Dashboard MCP provides a comprehensive toolkit for exploring UK health data across Trusted Research Environments. Key capabilities include:
-
-1. **High-level statistics** across England, Scotland, and Wales
-2. **Interactive dataset discovery** with filtering and search
-3. **Detailed dataset exploration** with overview, coverage, completeness, and data dictionary
-4. **Data quality analysis** through coverage and completeness metrics
-5. **Data dictionary browsing** with search functionality
+The BHF DSC Dashboard MCP provides a comprehensive toolkit for exploring UK health data across Trusted Research Environments.
