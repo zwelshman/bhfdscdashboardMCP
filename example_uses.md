@@ -8,7 +8,7 @@ Each tool can be invoked using natural language queries. Here are example user q
 
 | Tool | Example User Query |
 |------|-------------------|
-| `get_summary_stats` | "UUsing bhfdscdashboardMCP Show me summary statistics for the HES APC dataset across in England" |
+| `get_summary_stats` | "Using bhfdscdashboardMCP Show me summary statistics for the HES APC dataset in England" |
 | `pick_dataset` | "Using bhfdscdashboardMCP Find primary care dataset in Wales" |
 | `explore_dataset` | "Using bhfdscdashboardMCP Show me details about WLGP dataset in Wales" |
 | `explore_data_dictionary` | "Using bhfdscdashboardMCP Show me the data dictionary for Scotland" |
@@ -20,10 +20,51 @@ Each tool can be invoked using natural language queries. Here are example user q
 Below are the actual natural language queries users would type to invoke each tool:
 
 ### `get_summary_stats`
-> **User:** "Using bhfdscdashboardMCP Show me summary statistics for the HES APC dataset across in England" 
+> **User:** "Using bhfdscdashboardMCP Show me summary statistics for the HES APC dataset in England" 
+
+**Response:** 
+```
+Here's the summary for **HES APC (Admitted Patient Care)** in **England**, from the TRE dashboard data (archived 2025-11-04):
+
+## Overview
+
+| Metric | Value |
+|---|---|
+| Dataset | `hes_apc` |
+| Nation | England |
+| Total records | 509,647,645 |
+| Records with ID | 509,647,645 (100%) |
+| Distinct IDs | 77,570,205 |
+
+## Coverage (earliest date groups returned)
+
+The coverage table shows the earliest date groups in the dataset — the bulk of the 509M records sit in recent years, but the returned rows highlight the historical tail:
+
+| Date | Records | Distinct IDs |
+|---|---|---|
+| *(missing date)* | 159,820 | 146,920 |
+| 1800-01 | 1,820 | 1,760 |
+| 1801-01 | 7,010 | 6,870 |
+| 1924-05 → 1935-11 | ~10–20 per month | ~10 each |
+
+These pre-1936 entries are tiny (10–20 records each) and likely represent data-quality anomalies or placeholder dates rather than genuine admissions.
+
+## Field Completeness (50 columns)
+
+**Fully complete (100%):** ProductionDate, EPIKEY, SEX, PROCODE5, ADMIMETH, WAITLIST, ETHNOS, EPITYPE
+
+**High completeness (80–100%):** EPISTART (99.97%), MAINSPEF (99.97%), EPIDUR (99.83%), EPIEND (99.76%), STARTAGE_CALC (99.33%), ALCFRAC (87.78%), LSOA11 (82.76%), RESGOR (80.42%), PCTTREAT (80.42%)
+
+**Moderate (50–80%):** ELECDATE (74.31%), CCG_RESIDENCE (63.19%), CCG_TREATMENT_ORIGIN (63.19%), RESCTY_ONS (59.52%), OPERTN_COUNT (59.08%), SPELDUR_CALC (50.05%)
+
+**Low (<50%):** Diagnosis fields drop off quickly — DIAG_4_05 (35.28%), DIAG_3_07 (22.20%), DIAG_3_10 (11.43%) — and operation fields are sparse: OPERTN_3_08 (1.75%), OPERTN_4_17 (0.13%)
+
+**Key takeaway:** Core episode and demographic fields are essentially complete, but secondary diagnosis and operation fields become progressively sparser the further out you go (e.g., 4th+ diagnosis codes are only ~35% populated), which matters for any analysis relying on comorbidity or procedure coding.
+```
+
 
 ### `pick_dataset`
-> **User:** "Using bhfdscdashboardMCP Find primary care dataset in Wales"
+> **User:** "Using bhfdscdashboardMCP find primary care datasets in Wales"
 
 ### `explore_dataset`
 > **User:** "Using bhfdscdashboardMCP Show me details about WLGP dataset in Wales"
