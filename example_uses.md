@@ -12,8 +12,8 @@ Each tool can be invoked using natural language queries. Here are example user q
 | `pick_dataset` | "Find datasets in England" or "Search for cardiovascular datasets in Scotland" |
 | `explore_dataset` | "Show me details about HES APC dataset in England" |
 | `explore_data_dictionary` | "Show me the data dictionary for England" or "Search for diagnosis fields in Scotland data dictionary" |
-| `view_coverage` | "Show coverage charts for England" or "Show coverage for chess dataset in England" |
-| `view_completeness` | "Show completeness charts for Wales" or "Show completeness for chess dataset in England" |
+| `view_coverage` | "Show coverage for England" or "Show coverage for chess dataset in England" |
+| `view_completeness` | "Show completeness for Wales" or "Show completeness for chess dataset in England" |
 
 ## Real-World User Query Examples
 
@@ -48,7 +48,7 @@ Below are the actual natural language queries users would type to invoke each to
 > **User:** "Find all fields related to ethnicity in England data dictionary"
 
 ### `view_coverage`
-> **User:** "Show coverage charts for England"
+> **User:** "Show coverage for England"
 > 
 > **User:** "Show coverage for chess dataset in England"
 > 
@@ -57,7 +57,7 @@ Below are the actual natural language queries users would type to invoke each to
 > **User:** "Show me coverage trends for Wales datasets"
 
 ### `view_completeness`
-> **User:** "Show completeness charts for Wales"
+> **User:** "Show completeness for Wales"
 > 
 > **User:** "Show completeness for chess dataset in England"
 > 
@@ -83,33 +83,33 @@ All tools have been tested and confirmed working as of 2026-11-20:
 ```json
 {"nation": "England"}
 ```
-Returns interactive dataset picker widget for England datasets.
+Returns dataset metadata for England datasets.
 
 **Test 2 - Search with Nation Filter (Scotland + cardiovascular):**
 ```json
 {"nation": "Scotland", "search": "cardiovascular"}
 ```
-Returns interactive dataset picker filtered for cardiovascular datasets in Scotland.
+Returns dataset metadata filtered for cardiovascular datasets in Scotland.
 
 ### ✅ `explore_dataset` - WORKING
 **Input:**
 ```json
 {"dataset_name": "HES APC", "nation": "England"}
 ```
-Returns interactive data explorer widget for HES APC dataset in England.
+Returns overview, coverage, completeness, and data dictionary for HES APC dataset in England.
 
 ### ✅ `explore_data_dictionary` - WORKING
 **Test 1 - England Data Dictionary:**
 ```json
 {"dataset": "England"}
 ```
-Returns interactive data dictionary widget for England.
+Returns data dictionary for England.
 
 **Test 2 - Scotland Data Dictionary with Search:**
 ```json
 {"dataset": "Scotland", "search": "diagnosis"}
 ```
-Returns interactive data dictionary widget for Scotland filtered by "diagnosis".
+Returns data dictionary for Scotland filtered by "diagnosis".
 
 ### ✅ `view_coverage` - WORKING
 **Test 1 - England Coverage (All Datasets):**
@@ -144,7 +144,6 @@ The BHF DSC Dashboard MCP provides tools for exploring Trusted Research Environm
 - Dataset discovery and filtering
 - Data dictionary exploration
 - Coverage and completeness analysis
-- Interactive visualizations
 
 ---
 
@@ -182,12 +181,7 @@ Returns high-level statistics across all nations and datasets.
   },
   "sdeDatasets": 65,
   "ddScotlandRows": 27,
-  "ddWalesRows": 41,
-  "_meta": {
-    "ui": {
-      "resourceUri": "ui://widgets/data-explorer.html"
-    }
-  }
+  "ddWalesRows": 41
 }
 ```
 
@@ -204,7 +198,7 @@ Returns high-level statistics across all nations and datasets.
 
 ### Tool: `pick_dataset`
 
-Interactive dataset picker with filtering by nation, group, and search terms.
+Dataset picker with filtering by nation, group, and search terms.
 
 #### Example 2a: Filter by Nation (England)
 
@@ -228,11 +222,6 @@ Interactive dataset picker with filtering by nation, group, and search terms.
     "nation": "England",
     "group": null,
     "search": null
-  },
-  "_meta": {
-    "ui": {
-      "resourceUri": "ui://widgets/dataset-picker.html"
-    }
   }
 }
 ```
@@ -259,11 +248,6 @@ Interactive dataset picker with filtering by nation, group, and search terms.
     "nation": "Scotland",
     "group": null,
     "search": null
-  },
-  "_meta": {
-    "ui": {
-      "resourceUri": "ui://widgets/dataset-picker.html"
-    }
   }
 }
 ```
@@ -290,11 +274,6 @@ Interactive dataset picker with filtering by nation, group, and search terms.
     "nation": "Wales",
     "group": null,
     "search": null
-  },
-  "_meta": {
-    "ui": {
-      "resourceUri": "ui://widgets/dataset-picker.html"
-    }
   }
 }
 ```
@@ -321,11 +300,6 @@ Interactive dataset picker with filtering by nation, group, and search terms.
     "nation": null,
     "group": null,
     "search": "HES"
-  },
-  "_meta": {
-    "ui": {
-      "resourceUri": "ui://widgets/dataset-picker.html"
-    }
   }
 }
 ```
@@ -353,16 +327,9 @@ Interactive dataset picker with filtering by nation, group, and search terms.
     "nation": "England",
     "group": "Cardiovascular",
     "search": null
-  },
-  "_meta": {
-    "ui": {
-      "resourceUri": "ui://widgets/dataset-picker.html"
-    }
   }
 }
 ```
-
-> **Note**: The dataset picker returns an interactive UI widget. The actual dataset listings are rendered in the UI component at `ui://widgets/dataset-picker.html`.
 
 ---
 
@@ -392,16 +359,9 @@ Get detailed information about a specific dataset including overview, coverage, 
   "overview": null,
   "coverage": [],
   "completeness": [],
-  "dataDictionary": [],
-  "_meta": {
-    "ui": {
-      "resourceUri": "ui://widgets/data-explorer.html"
-    }
-  }
+  "dataDictionary": []
 }
 ```
-
-> **Note**: Returns an interactive data explorer widget at `ui://widgets/data-explorer.html` for detailed exploration.
 
 ---
 

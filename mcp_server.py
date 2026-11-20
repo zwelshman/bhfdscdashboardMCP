@@ -17,7 +17,7 @@ import httpx
 import pandas as pd
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
-from mcp.types import TextContent, EmbeddedResource
+from mcp.types import TextContent
 from pydantic import BaseModel, Field
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -26,25 +26,6 @@ from starlette.responses import JSONResponse, Response
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
 
-# Widget HTML resources
-WIDGETS_DIR = Path(__file__).parent / "widgets"
-RESOURCE_MIME_TYPE = "text/html;profile=mcp-app"
-
-def load_widget(name: str) -> str:
-    """Load widget HTML and inline the ext-apps bundle."""
-    widget_path = WIDGETS_DIR / name
-    if not widget_path.exists():
-        return f"<html><body>Widget not found: {name}</body></html>"
-    return widget_path.read_text(encoding="utf-8")
-
-# Pre-load widgets
-WIDGET_HTML = {
-    "dataset-picker.html": load_widget("dataset_picker.html"),
-    "data-explorer.html": load_widget("data_explorer.html"),
-    "coverage-chart.html": load_widget("coverage_chart.html"),
-    "completeness-chart.html": load_widget("completeness_chart.html"),
-    "data-dictionary.html": load_widget("data_dictionary.html"),
-}
 
 # Explicit transport security
 mcp: FastMCP = FastMCP(
@@ -106,15 +87,15 @@ CACHE_FILES = {
     "england_overall": "export_dashboard_england_20251104_data_overall.csv",
     "england_coverage": "export_dashboard_england_20251104_data_coverage.csv",
     "england_completeness": "export_dashboard_england_20251104_data_completeness.csv",
-    "sail_overview": "export_dashboard_SAIL_20240111_data_overview.csv",
-    "sail_coverage": "export_dashboard_SAIL_20240111_data_coverage.csv",
-    "sail_completeness": "export_dashboard_SAIL_20240111_data_completeness.csv",
+    "sail_overview": "export_dashboard_WALES_20240111_data_overview.csv",
+    "sail_coverage": "export_dashboard_WALES_20240111_data_coverage.csv",
+    "sail_completeness": "export_dashboard_WALES_20240111_data_completeness.csv",
     "scotland_overview": "export_dashboard_scotland_overview20230811.csv",
     "scotland_coverage": "export_dashboard_scotland_coverage20230811.csv",
     "scotland_completeness": "export_dashboard_scotland_completeness20230811.csv",
     "dd_scotland": "DD_Scotland.xlsx",
     "dd_wales": "DD_Wales.xlsx",
-    "sde_data_dict": "20240624_SDE_DD_391419_j3w9t.xlsx",
+    "sde_data_dict": "DD_England.xlsx",
 }
 
 
@@ -253,11 +234,6 @@ async def pick_dataset(
         "nations": nations,
         "groups": groups,
         "filters": {"nation": nation, "group": group, "search": search},
-        "_meta": {
-            "ui": {
-                "resourceUri": "ui://widgets/dataset-picker.html"
-            }
-        }
     }
     
     return [TextContent(type="text", text=str(result))]
@@ -304,11 +280,6 @@ async def explore_dataset(
         "coverage": coverage[:50],
         "completeness": completeness[:50],
         "dataDictionary": data_dict[:100],
-        "_meta": {
-            "ui": {
-                "resourceUri": "ui://widgets/data-explorer.html"
-            }
-        }
     }
     
     return [TextContent(type="text", text=str(result))]
@@ -338,11 +309,6 @@ async def view_coverage(
         "coverageData": coverage_data[:200],
         "nation": nation,
         "dataset": dataset,
-        "_meta": {
-            "ui": {
-                "resourceUri": "ui://widgets/coverage-chart.html"
-            }
-        }
     }
     
     return [TextContent(type="text", text=str(result))]
@@ -372,11 +338,6 @@ async def view_completeness(
         "completenessData": completeness_data[:200],
         "nation": nation,
         "dataset": dataset,
-        "_meta": {
-            "ui": {
-                "resourceUri": "ui://widgets/completeness-chart.html"
-            }
-        }
     }
     
     return [TextContent(type="text", text=str(result))]
@@ -402,11 +363,6 @@ async def explore_data_dictionary(
         "dataset": dataset,
         "dataDictionary": filtered_dict[:200],
         "search": search,
-        "_meta": {
-            "ui": {
-                "resourceUri": "ui://widgets/data-dictionary.html"
-            }
-        }
     }
     
     return [TextContent(type="text", text=str(result))]
@@ -454,45 +410,9 @@ async def get_summary_stats() -> list[TextContent]:
         "sdeDatasets": len(DATA_CACHE.get("sde_data_dict", {})),
         "ddScotlandRows": len(DATA_CACHE.get("dd_scotland", [])),
         "ddWalesRows": len(DATA_CACHE.get("dd_wales", [])),
-        "_meta": {
-            "ui": {
-                "resourceUri": "ui://widgets/data-explorer.html"
-            }
-        }
     }
     
     return [TextContent(type="text", text=str(stats))]
-
-
-# Resource handlers for widgets
-@mcp.resource("ui://widgets/dataset-picker.html", mime_type=RESOURCE_MIME_TYPE)
-async def dataset_picker_widget() -> str:
-    """Dataset picker widget."""
-    return WIDGET_HTML["dataset-picker.html"]
-
-
-@mcp.resource("ui://widgets/data-explorer.html", mime_type=RESOURCE_MIME_TYPE)
-async def data_explorer_widget() -> str:
-    """Data explorer widget."""
-    return WIDGET_HTML["data-explorer.html"]
-
-
-@mcp.resource("ui://widgets/coverage-chart.html", mime_type=RESOURCE_MIME_TYPE)
-async def coverage_chart_widget() -> str:
-    """Coverage chart widget."""
-    return WIDGET_HTML["coverage-chart.html"]
-
-
-@mcp.resource("ui://widgets/completeness-chart.html", mime_type=RESOURCE_MIME_TYPE)
-async def completeness_chart_widget() -> str:
-    """Completeness chart widget."""
-    return WIDGET_HTML["completeness-chart.html"]
-
-
-@mcp.resource("ui://widgets/data-dictionary.html", mime_type=RESOURCE_MIME_TYPE)
-async def data_dictionary_widget() -> str:
-    """Data dictionary widget."""
-    return WIDGET_HTML["data-dictionary.html"]
 
 
 # Health check endpoint

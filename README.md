@@ -1,13 +1,13 @@
 # BHFDSC CVD-COVID TRE Dashboard MCP Server
 
-An interactive MCP (Model Context Protocol) server for exploring the BHFDSC CVD-COVID TRE Dashboard data. This server provides tools with interactive UI widgets for exploring datasets across England, Scotland, and Wales.
+An MCP (Model Context Protocol) server for exploring the BHFDSC CVD-COVID TRE Dashboard data. This server provides text-based tools for exploring datasets across England, Scotland, and Wales.
 
 ## Features
 
-- **Dataset Picker** - Interactive picker to explore TRE datasets with filtering by nation, group, and search terms
+- **Dataset Picker** - Explore TRE datasets with filtering by nation, group, and search terms
 - **Data Explorer** - Detailed exploration of specific datasets including overview, coverage, completeness, and data dictionary
-- **Coverage Charts** - Interactive bar charts visualizing data coverage across nations and datasets
-- **Completeness Charts** - Interactive bar charts visualizing data completeness across nations and datasets
+- **Coverage Charts** - Data coverage across nations and datasets
+- **Completeness Charts** - Data completeness across nations and datasets
 - **Data Dictionary Explorer** - Explore SDE data dictionary with field descriptions, types, and search
 - **Summary Statistics** - Overview statistics across all datasets and nations
 
@@ -61,14 +61,14 @@ curl http://localhost:8000/health
 ## Available Tools
 
 ### `pick_dataset`
-Interactive picker for TRE datasets across England, Scotland, and Wales.
+Picker for TRE datasets across England, Scotland, and Wales.
 
 **Parameters:**
 - `nation` (optional): Filter by nation - "England", "Scotland", "Wales", or "All"
 - `group` (optional): Filter by group (e.g., "Primary", "Secondary Care")
 - `search` (optional): Search term for dataset title/description
 
-**Returns:** Dataset metadata with interactive UI widget
+**Returns:** Dataset metadata as structured text
 
 ### `explore_dataset`
 Detailed exploration of a specific dataset.
@@ -77,25 +77,25 @@ Detailed exploration of a specific dataset.
 - `dataset_name`: Name of the dataset to explore
 - `nation`: Nation the dataset belongs to ("England", "Scotland", "Wales")
 
-**Returns:** Overview, coverage, completeness, and data dictionary with interactive UI widget
+**Returns:** Overview, coverage, completeness, and data dictionary as structured text
 
 ### `view_coverage`
-Interactive coverage charts for datasets across nations.
+Coverage data for datasets across nations.
 
 **Parameters:**
 - `nation` (optional): Filter by nation
 - `dataset` (optional): Specific dataset to view
 
-**Returns:** Coverage data with interactive chart widget
+**Returns:** Coverage data as structured text
 
 ### `view_completeness`
-Interactive completeness charts for datasets across nations.
+Completeness data for datasets across nations.
 
 **Parameters:**
 - `nation` (optional): Filter by nation
 - `dataset` (optional): Specific dataset to view
 
-**Returns:** Completeness data with interactive chart widget
+**Returns:** Completeness data as structured text
 
 ### `explore_data_dictionary`
 Explore the SDE data dictionary for specific datasets.
@@ -104,22 +104,14 @@ Explore the SDE data dictionary for specific datasets.
 - `dataset`: Dataset name from SDE data dictionary
 - `search` (optional): Search term for field names/descriptions
 
-**Returns:** Data dictionary with interactive table widget
+**Returns:** Data dictionary as structured text
 
 ### `get_summary_stats`
 Get summary statistics across all datasets and nations.
 
 **Parameters:** None
 
-**Returns:** Statistics with interactive UI widget
-
-## Available Resources (Widgets)
-
-- `ui://widgets/dataset-picker.html` - Dataset picker widget
-- `ui://widgets/data-explorer.html` - Data explorer widget
-- `ui://widgets/coverage-chart.html` - Coverage chart widget
-- `ui://widgets/completeness-chart.html` - Completeness chart widget
-- `ui://widgets/data-dictionary.html` - Data dictionary widget
+**Returns:** Statistics as structured text
 
 ## Configuration
 
@@ -192,12 +184,7 @@ async with streamablehttp_client("http://localhost:8000/mcp") as (read, write):
 bhfdscdashboardMCP/
 ├── mcp_server.py          # Main MCP server
 ├── pyproject.toml         # Project configuration
-├── widgets/               # Interactive UI widgets
-│   ├── dataset_picker.html
-│   ├── data_explorer.html
-│   ├── coverage_chart.html
-│   ├── completeness_chart.html
-│   └── data_dictionary.html
+├── data/                  # Cached data files
 ├── venv/                  # Virtual environment (gitignored)
 └── README.md              # This file
 ```
