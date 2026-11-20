@@ -20,7 +20,7 @@ Each tool can be invoked using natural language queries. Here are example user q
 Below are the actual natural language queries users would type to invoke each tool:
 
 ### `get_summary_stats`
-> **User:** "Using bhfdscdashboardMCP Show me summary statistics for the HES APC dataset across in England"
+> **User:** "Using bhfdscdashboardMCP Show me summary statistics for the HES APC dataset across in England" 
 
 ### `pick_dataset`
 > **User:** "Using bhfdscdashboardMCP Find primary care dataset in Wales"
