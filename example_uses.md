@@ -23,7 +23,6 @@ Below are the actual natural language queries users would type to invoke each to
 > **User:** "Using bhfdscdashboardMCP Show me summary statistics for the HES APC dataset in England" 
 
 **Response:** 
-```
 Here's the summary for **HES APC (Admitted Patient Care)** in **England**, from the TRE dashboard data (archived 2025-11-04):
 
 ## Overview
@@ -60,11 +59,32 @@ These pre-1936 entries are tiny (10–20 records each) and likely represent data
 **Low (<50%):** Diagnosis fields drop off quickly — DIAG_4_05 (35.28%), DIAG_3_07 (22.20%), DIAG_3_10 (11.43%) — and operation fields are sparse: OPERTN_3_08 (1.75%), OPERTN_4_17 (0.13%)
 
 **Key takeaway:** Core episode and demographic fields are essentially complete, but secondary diagnosis and operation fields become progressively sparser the further out you go (e.g., 4th+ diagnosis codes are only ~35% populated), which matters for any analysis relying on comorbidity or procedure coding.
-```
 
 
 ### `pick_dataset`
 > **User:** "Using bhfdscdashboardMCP find primary care datasets in Wales"
+
+**Response:** 
+Here are the Wales datasets related to primary care found in the TRE dashboard:
+
+## Core Primary Care Dataset
+
+### Welsh Longitudinal General Practice (WLGP)
+- **Group:** Primary | **Status:** ✅ Dataset available
+- **Coverage from:** January 1950
+- **Link:** https://healthdatagateway.org/en/dataset/355
+- **Description:** Contains attendance and clinical information for all general practice interactions, including patient symptoms, investigations, diagnoses, prescribed medication, and referrals to tertiary care. Covers **83% of the population of Wales** and **80% of GP practices**.
+
+## Related Datasets Capturing Primary Care Activity
+
+| Dataset | Group | Status | From | Description |
+|---|---|---|---|---|
+| **Welsh Dispensing Dataset (WDDS)** | Prescribing/Dispensing | ✅ Available | 2000-01 | GP and non-medical prescriber prescriptions dispensed in the community — all medicines, dressings, and appliances ([link](https://healthdatagateway.org/en/dataset/285)) |
+| **Outpatient Referral Dataset (OPRD)** | Secondary Care | ✅ Available | 2009-01 | Complete referral pathway from primary care (GP, dental, A&E, self-referrals) to secondary care ([link](https://healthdatagateway.org/en/dataset/308)) |
+| **Referral to Treatment Times (RTTD)** | Other | ⏳ Requested | 2000-01 | Total wait time from GP referral to hospital treatment ([link](https://healthdatagateway.org/en/dataset/349)) |
+| **Welsh Demographic Service Dataset (WDSD)** | Other | ⏳ Requested | 2000-01 | Register of all individuals registered with a Welsh GP, including anonymised address and practice history ([link](https://healthdatagateway.org/en/dataset/359)) |
+
+**Key takeaway:** WLGP is the main primary care dataset in Wales, with exceptionally long coverage (since 1950). WDDS complements it for prescribing, while WDSD provides the GP registration denominator population.
 
 ### `explore_dataset`
 > **User:** "Using bhfdscdashboardMCP Show me details about WLGP dataset in Wales"
