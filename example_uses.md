@@ -387,12 +387,7 @@ Explore the SDE data dictionary for specific datasets with field descriptions an
 {
   "dataset": "England",
   "dataDictionary": [],
-  "search": null,
-  "_meta": {
-    "ui": {
-      "resourceUri": "ui://widgets/data-dictionary.html"
-    }
-  }
+  "search": null
 }
 ```
 
@@ -412,12 +407,7 @@ Explore the SDE data dictionary for specific datasets with field descriptions an
 {
   "dataset": "Wales",
   "dataDictionary": [],
-  "search": null,
-  "_meta": {
-    "ui": {
-      "resourceUri": "ui://widgets/data-dictionary.html"
-    }
-  }
+  "search": null
 }
 ```
 
@@ -438,16 +428,9 @@ Explore the SDE data dictionary for specific datasets with field descriptions an
 {
   "dataset": "Scotland",
   "dataDictionary": [],
-  "search": "diagnosis",
-  "_meta": {
-    "ui": {
-      "resourceUri": "ui://widgets/data-dictionary.html"
-    }
-  }
+  "search": "diagnosis"
 }
 ```
-
-> **Note**: Returns an interactive data dictionary widget at `ui://widgets/data-dictionary.html`.
 
 ---
 
