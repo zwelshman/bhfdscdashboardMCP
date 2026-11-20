@@ -66,7 +66,7 @@ mcp: FastMCP = FastMCP(
         ),
         allowed_hosts=[
             h.strip()
-            for h in os.environ.get("MCP_ALLOWED_HOSTS", "bhfdscdashboardmcp.onrender.com").split(",")
+            for h in os.environ.get("MCP_ALLOWED_HOSTS", "localhost:*,127.0.0.1:*,localhost:8000,127.0.0.1:8000,bhfdscdashboardmcp.onrender.com").split(",")
             if h.strip()
         ],
         allowed_origins=[
@@ -76,6 +76,10 @@ mcp: FastMCP = FastMCP(
         ],
     ),
 )
+
+# Data cache directory
+DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR.mkdir(exist_ok=True)
 
 # Data cache
 DATA_CACHE: dict[str, Any] = {
@@ -94,60 +98,88 @@ DATA_CACHE: dict[str, Any] = {
     "sde_data_dict": None,
 }
 
-BASE_URL = "https://raw.githubusercontent.com/BHFDSC/cvd-covid-tre-dashboard/8bb8245127b46c9d9ead6a7f66eb509167d03dbe/Data/"
+BASE_URL = "https://raw.githubusercontent.com/BHFDSC/cvd-covid-tre-dashboard/main/Data/"
+
+# Local cache file mapping
+CACHE_FILES = {
+    "tre_dataset_link": "tre_dataset_link.csv",
+    "england_overall": "export_dashboard_england_20251104_data_overall.csv",
+    "england_coverage": "export_dashboard_england_20251104_data_coverage.csv",
+    "england_completeness": "export_dashboard_england_20251104_data_completeness.csv",
+    "sail_overview": "export_dashboard_SAIL_20240111_data_overview.csv",
+    "sail_coverage": "export_dashboard_SAIL_20240111_data_coverage.csv",
+    "sail_completeness": "export_dashboard_SAIL_20240111_data_completeness.csv",
+    "scotland_overview": "export_dashboard_scotland_overview20230811.csv",
+    "scotland_coverage": "export_dashboard_scotland_coverage20230811.csv",
+    "scotland_completeness": "export_dashboard_scotland_completeness20230811.csv",
+    "dd_scotland": "DD_Scotland.xlsx",
+    "dd_wales": "DD_Wales.xlsx",
+    "sde_data_dict": "20240624_SDE_DD_391419_j3w9t.xlsx",
+}
 
 
 async def load_data() -> None:
-    """Load all data from GitHub into cache."""
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        # Load TRE dataset link CSV
-        resp = await client.get(BASE_URL + "TRE_dataset_link.csv")
-        DATA_CACHE["tre_dataset_link"] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
+    """Load all data from local cache or GitHub into cache."""
+    async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
+        # Load CSV files
+        csv_keys = [
+            "tre_dataset_link", "england_overall", "england_coverage", "england_completeness",
+            "sail_overview", "sail_coverage", "sail_completeness",
+            "scotland_overview", "scotland_coverage", "scotland_completeness"
+        ]
+        
+        for key in csv_keys:
+            cache_file = DATA_DIR / CACHE_FILES[key]
+            if cache_file.exists() and cache_file.stat().st_size > 100:
+                print(f"Loading {key} from local cache...", file=sys.stderr)
+                try:
+                    DATA_CACHE[key] = pd.read_csv(cache_file).to_dict("records")
+                except Exception as e:
+                    print(f"Cache file corrupted, re-downloading {key}: {e}", file=sys.stderr)
+                    cache_file.unlink(missing_ok=True)
+            
+            if key not in DATA_CACHE or DATA_CACHE[key] is None:
+                print(f"Downloading {key} from GitHub...", file=sys.stderr)
+                resp = await client.get(BASE_URL + CACHE_FILES[key])
+                if resp.status_code == 200:
+                    cache_file.write_bytes(resp.content)
+                    DATA_CACHE[key] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
+                else:
+                    print(f"Failed to download {key}: {resp.status_code}", file=sys.stderr)
+                    DATA_CACHE[key] = []
 
-        # Load England data
-        resp = await client.get(BASE_URL + "export_dashboard_england_20251104_data_overall.csv")
-        DATA_CACHE["england_overall"] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
-
-        resp = await client.get(BASE_URL + "export_dashboard_england_20251104_data_coverage.csv")
-        DATA_CACHE["england_coverage"] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
-
-        resp = await client.get(BASE_URL + "export_dashboard_england_20251104_data_completeness.csv")
-        DATA_CACHE["england_completeness"] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
-
-        # Load SAIL (Wales) data
-        resp = await client.get(BASE_URL + "export_dashboard_SAIL_20240111_data_overview.csv")
-        DATA_CACHE["sail_overview"] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
-
-        resp = await client.get(BASE_URL + "export_dashboard_SAIL_20240111_data_coverage.csv")
-        DATA_CACHE["sail_coverage"] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
-
-        resp = await client.get(BASE_URL + "export_dashboard_SAIL_20240111_data_completeness.csv")
-        DATA_CACHE["sail_completeness"] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
-
-        # Load Scotland data
-        resp = await client.get(BASE_URL + "export_dashboard_scotland_overview20230811.csv")
-        DATA_CACHE["scotland_overview"] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
-
-        resp = await client.get(BASE_URL + "export_dashboard_scotland_coverage20230811.csv")
-        DATA_CACHE["scotland_coverage"] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
-
-        resp = await client.get(BASE_URL + "export_dashboard_scotland_completeness20230811.csv")
-        DATA_CACHE["scotland_completeness"] = pd.read_csv(pd.io.common.StringIO(resp.text)).to_dict("records")
-
-        # Load DD Scotland Excel
-        resp = await client.get(BASE_URL + "DD_Scotland.xlsx")
-        df = pd.read_excel(pd.io.common.BytesIO(resp.content), header=None)
-        DATA_CACHE["dd_scotland"] = df.values.tolist()
-
-        # Load DD Wales Excel
-        resp = await client.get(BASE_URL + "DD_Wales.xlsx")
-        df = pd.read_excel(pd.io.common.BytesIO(resp.content), header=None)
-        DATA_CACHE["dd_wales"] = df.values.tolist()
-
-        # Load SDE Data Dictionary Excel
-        resp = await client.get(BASE_URL + "20240624_SDE_DD_391419_j3w9t.xlsx")
-        xls = pd.read_excel(pd.io.common.BytesIO(resp.content), sheet_name=None)
-        DATA_CACHE["sde_data_dict"] = {name: df.values.tolist() for name, df in xls.items()}
+        # Load Excel files
+        excel_keys = ["dd_scotland", "dd_wales", "sde_data_dict"]
+        
+        for key in excel_keys:
+            cache_file = DATA_DIR / CACHE_FILES[key]
+            if cache_file.exists() and cache_file.stat().st_size > 100:
+                print(f"Loading {key} from local cache...", file=sys.stderr)
+                try:
+                    if key == "sde_data_dict":
+                        xls = pd.read_excel(cache_file, sheet_name=None)
+                        DATA_CACHE[key] = {name: df.values.tolist() for name, df in xls.items()}
+                    else:
+                        df = pd.read_excel(cache_file, header=None)
+                        DATA_CACHE[key] = df.values.tolist()
+                except Exception as e:
+                    print(f"Cache file corrupted, re-downloading {key}: {e}", file=sys.stderr)
+                    cache_file.unlink(missing_ok=True)
+            
+            if key not in DATA_CACHE or DATA_CACHE[key] is None:
+                print(f"Downloading {key} from GitHub...", file=sys.stderr)
+                resp = await client.get(BASE_URL + CACHE_FILES[key])
+                if resp.status_code == 200:
+                    cache_file.write_bytes(resp.content)
+                    if key == "sde_data_dict":
+                        xls = pd.read_excel(pd.io.common.BytesIO(resp.content), sheet_name=None)
+                        DATA_CACHE[key] = {name: df.values.tolist() for name, df in xls.items()}
+                    else:
+                        df = pd.read_excel(pd.io.common.BytesIO(resp.content), header=None)
+                        DATA_CACHE[key] = df.values.tolist()
+                else:
+                    print(f"Failed to download {key}: {resp.status_code}", file=sys.stderr)
+                    DATA_CACHE[key] = []
 
     print("All data loaded successfully", file=sys.stderr)
 
