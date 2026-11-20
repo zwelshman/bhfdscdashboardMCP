@@ -8,12 +8,12 @@ Each tool can be invoked using natural language queries. Here are example user q
 
 | Tool | Example User Query |
 |------|-------------------|
-| `get_summary_stats` | "Using bhfdscdashboardMCP Show me summary statistics for all datasets across all nations" |
-| `pick_dataset` | "Using bhfdscdashboardMCP Find datasets in England" |
-| `explore_dataset` | "Using bhfdscdashboardMCP Show me details about HES APC dataset in England" |
-| `explore_data_dictionary` | "Using bhfdscdashboardMCP Show me the data dictionary for England" |
-| `view_coverage` | "Using bhfdscdashboardMCP Show coverage for England" |
-| `view_completeness` | "Using bhfdscdashboardMCP Show completeness for Wales" |
+| `get_summary_stats` | "UUsing bhfdscdashboardMCP Show me summary statistics for the HES APC dataset across in England" |
+| `pick_dataset` | "Using bhfdscdashboardMCP Find primary care dataset in Wales" |
+| `explore_dataset` | "Using bhfdscdashboardMCP Show me details about WLGP dataset in Wales" |
+| `explore_data_dictionary` | "Using bhfdscdashboardMCP Show me the data dictionary for Scotland" |
+| `view_coverage` | "Using bhfdscdashboardMCP Show coverage for GDPPR in England" |
+| `view_completeness` | "Using bhfdscdashboardMCP Show completeness for pedew diagnosis table" |
 
 ## Real-World User Query Examples
 
