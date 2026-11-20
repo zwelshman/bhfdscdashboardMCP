@@ -79,11 +79,14 @@ DATA_CACHE: dict[str, Any] = {
     "sde_data_dict": None,
 }
 
+# Dataset name resolver - maps user-friendly names to dataset identifiers
+DATASET_NAME_MAP: dict[str, str] = {}
+
 BASE_URL = "https://raw.githubusercontent.com/BHFDSC/cvd-covid-tre-dashboard/main/Data/"
 
 # Local cache file mapping
 CACHE_FILES = {
-    "tre_dataset_link": "tre_dataset_link.csv",
+    "tre_dataset_link": "TRE_dataset_link.csv",
     "england_overall": "export_dashboard_england_20251104_data_overall.csv",
     "england_coverage": "export_dashboard_england_20251104_data_coverage.csv",
     "england_completeness": "export_dashboard_england_20251104_data_completeness.csv",
@@ -160,9 +163,115 @@ async def load_data() -> None:
                         DATA_CACHE[key] = df.values.tolist()
                 else:
                     print(f"Failed to download {key}: {resp.status_code}", file=sys.stderr)
-                    DATA_CACHE[key] = []
+                    # Ensure sde_data_dict is always a dict
+                    if key == "sde_data_dict":
+                        DATA_CACHE[key] = {}
+                    else:
+                        DATA_CACHE[key] = []
 
     print("All data loaded successfully", file=sys.stderr)
+    
+    # Build dataset name map for semantic matching
+    build_dataset_name_map()
+
+
+def build_dataset_name_map() -> None:
+    """Build a mapping from user-friendly names to dataset identifiers."""
+    global DATASET_NAME_MAP
+    datasets = DATA_CACHE.get("tre_dataset_link", [])
+    
+    for d in datasets:
+        dataset_id = d.get("Dataset", "")
+        if not dataset_id or not isinstance(dataset_id, str):
+            continue
+        dataset_id = dataset_id.strip()
+        if not dataset_id:
+            continue
+            
+        # Map various name fields to the dataset identifier
+        name_fields = [
+            d.get("Title", ""),
+            d.get("Shortname", ""),
+            d.get("title_dataset", ""),
+            d.get("dataset_dataset", ""),
+            d.get("table", ""),
+        ]
+        
+        for name in name_fields:
+            if name and isinstance(name, str):
+                clean_name = name.strip()
+                if clean_name:
+                    # Store lowercase for case-insensitive matching
+                    DATASET_NAME_MAP[clean_name.lower()] = dataset_id
+                    # Also store with common variations
+                    DATASET_NAME_MAP[clean_name.lower().replace(" ", "_")] = dataset_id
+                    DATASET_NAME_MAP[clean_name.lower().replace("-", "_")] = dataset_id
+                    DATASET_NAME_MAP[clean_name.lower().replace("(", "").replace(")", "")] = dataset_id
+
+
+def resolve_dataset_name(user_input: str, nation: str | None = None) -> str | None:
+    """Resolve a user-friendly dataset name to the actual dataset identifier.
+    
+    Args:
+        user_input: User's dataset name (e.g., "HES APC", "Hospital Episode Statistics")
+        nation: Optional nation filter (England, Scotland, Wales)
+    
+    Returns:
+        The dataset identifier (e.g., "hes_apc") or None if not found
+    """
+    if not user_input:
+        return None
+    
+    # Direct match in map (case-insensitive)
+    key = user_input.strip().lower()
+    if key in DATASET_NAME_MAP:
+        return DATASET_NAME_MAP[key]
+    
+    # Try with common variations
+    variations = [
+        key.replace(" ", "_"),
+        key.replace("-", "_"),
+        key.replace("(", "").replace(")", ""),
+        key.replace(".", ""),
+    ]
+    
+    for var in variations:
+        if var in DATASET_NAME_MAP:
+            return DATASET_NAME_MAP[var]
+    
+    # Fuzzy match: check if user input is contained in any known name
+    datasets = DATA_CACHE.get("tre_dataset_link", [])
+    user_lower = user_input.lower()
+    
+    for d in datasets:
+        dataset_id = d.get("Dataset", "")
+        if not dataset_id or not isinstance(dataset_id, str):
+            continue
+        dataset_id = dataset_id.strip()
+        if not dataset_id:
+            continue
+            
+        # Filter by nation if provided
+        if nation and d.get("Nation") != nation:
+            continue
+        
+        # Check all name fields
+        name_fields = [
+            d.get("Title", ""),
+            d.get("Shortname", ""),
+            d.get("title_dataset", ""),
+            d.get("dataset_dataset", ""),
+            d.get("table", ""),
+        ]
+        
+        for name in name_fields:
+            if name and isinstance(name, str):
+                name_lower = name.lower()
+                # Check if user input is a substring of the known name
+                if user_lower in name_lower or name_lower in user_lower:
+                    return dataset_id
+    
+    return None
 
 
 # Load data on import (will run when module is imported)
@@ -211,6 +320,7 @@ async def pick_dataset(
     """Open an interactive picker to explore TRE datasets across England, Scotland, and Wales.
     
     Filter by nation, group, or search terms. Returns dataset metadata with interactive UI.
+    The search parameter supports semantic matching against Title, Shortname, Description, and Dataset identifier.
     """
     datasets = DATA_CACHE.get("tre_dataset_link", [])
     
@@ -222,8 +332,12 @@ async def pick_dataset(
         term = search.lower()
         datasets = [d for d in datasets if 
             term in str(d.get("Title", "")).lower() or
+            term in str(d.get("Shortname", "")).lower() or
             term in str(d.get("Description", "")).lower() or
-            term in str(d.get("Dataset", "")).lower()]
+            term in str(d.get("Dataset", "")).lower() or
+            term in str(d.get("title_dataset", "")).lower() or
+            term in str(d.get("dataset_dataset", "")).lower() or
+            term in str(d.get("table", "")).lower()]
     
     nations = sorted(set(d.get("Nation") for d in datasets if d.get("Nation")))
     groups = sorted(set(d.get("Group") for d in datasets if d.get("Group")))
@@ -245,7 +359,23 @@ async def explore_dataset(
     dataset_name: str,
     nation: str,
 ) -> list[TextContent]:
-    """Explore detailed information about a specific dataset including coverage, completeness, and data dictionary."""
+    """Explore detailed information about a specific dataset including coverage, completeness, and data dictionary.
+    
+    The dataset_name can be a user-friendly name (e.g., "HES APC", "Hospital Episode Statistics") 
+    or the dataset identifier (e.g., "hes_apc"). The tool will automatically resolve it.
+    """
+    
+    # Resolve user-friendly name to dataset identifier
+    resolved_name = resolve_dataset_name(dataset_name, nation)
+    if resolved_name:
+        dataset_name = resolved_name
+    else:
+        # Return helpful error with suggestions
+        datasets = DATA_CACHE.get("tre_dataset_link", [])
+        if nation and nation != "All":
+            datasets = [d for d in datasets if d.get("Nation") == nation]
+        available = sorted(set(d.get("Shortname", "") or d.get("Title", "") for d in datasets if d.get("Shortname") or d.get("Title")))
+        return [TextContent(type="text", text=f"Dataset '{dataset_name}' not found. Available datasets in {nation}: {', '.join(available[:20])}")]
     
     # Select the right data based on nation
     if nation == "England":
@@ -291,7 +421,29 @@ async def view_coverage(
     nation: str | None = None,
     dataset: str | None = None,
 ) -> list[TextContent]:
-    """View interactive coverage charts for datasets across nations."""
+    """View interactive coverage charts for datasets across nations.
+    
+    The dataset parameter can be a user-friendly name (e.g., "HES APC", "Hospital Episode Statistics") 
+    or the dataset identifier (e.g., "hes_apc"). The tool will automatically resolve it.
+    """
+    
+    # Resolve dataset name if provided
+    resolved_dataset = None
+    if dataset:
+        # Try to resolve with nation hint
+        resolved_dataset = resolve_dataset_name(dataset, nation)
+        if not resolved_dataset:
+            # Try without nation filter
+            resolved_dataset = resolve_dataset_name(dataset)
+        if resolved_dataset:
+            dataset = resolved_dataset
+        else:
+            # Return helpful error with suggestions
+            datasets = DATA_CACHE.get("tre_dataset_link", [])
+            if nation and nation != "All":
+                datasets = [d for d in datasets if d.get("Nation") == nation]
+            available = sorted(set(d.get("Shortname", "") or d.get("Title", "") for d in datasets if d.get("Shortname") or d.get("Title")))
+            return [TextContent(type="text", text=f"Dataset '{dataset}' not found. Available datasets: {', '.join(available[:20])}")]
     
     coverage_data = []
     
@@ -320,7 +472,29 @@ async def view_completeness(
     nation: str | None = None,
     dataset: str | None = None,
 ) -> list[TextContent]:
-    """View interactive completeness charts for datasets across nations."""
+    """View interactive completeness charts for datasets across nations.
+    
+    The dataset parameter can be a user-friendly name (e.g., "HES APC", "Hospital Episode Statistics") 
+    or the dataset identifier (e.g., "hes_apc"). The tool will automatically resolve it.
+    """
+    
+    # Resolve dataset name if provided
+    resolved_dataset = None
+    if dataset:
+        # Try to resolve with nation hint
+        resolved_dataset = resolve_dataset_name(dataset, nation)
+        if not resolved_dataset:
+            # Try without nation filter
+            resolved_dataset = resolve_dataset_name(dataset)
+        if resolved_dataset:
+            dataset = resolved_dataset
+        else:
+            # Return helpful error with suggestions
+            datasets = DATA_CACHE.get("tre_dataset_link", [])
+            if nation and nation != "All":
+                datasets = [d for d in datasets if d.get("Nation") == nation]
+            available = sorted(set(d.get("Shortname", "") or d.get("Title", "") for d in datasets if d.get("Shortname") or d.get("Title")))
+            return [TextContent(type="text", text=f"Dataset '{dataset}' not found. Available datasets: {', '.join(available[:20])}")]
     
     completeness_data = []
     
@@ -349,7 +523,20 @@ async def explore_data_dictionary(
     dataset: str,
     search: str | None = None,
 ) -> list[TextContent]:
-    """Explore the SDE data dictionary for specific datasets with field descriptions and types."""
+    """Explore the SDE data dictionary for specific datasets with field descriptions and types.
+    
+    The dataset parameter can be a user-friendly name (e.g., "HES APC", "Hospital Episode Statistics") 
+    or the dataset identifier (e.g., "hes_apc"). The tool will automatically resolve it.
+    """
+    
+    # Resolve dataset name
+    resolved_dataset = resolve_dataset_name(dataset)
+    if resolved_dataset:
+        dataset = resolved_dataset
+    else:
+        # Return helpful error with suggestions
+        available = list(DATA_CACHE.get("sde_data_dict", {}).keys())
+        return [TextContent(type="text", text=f"Dataset '{dataset}' not found in SDE data dictionary. Available datasets: {', '.join(available[:20])}")]
     
     data_dict = DATA_CACHE.get("sde_data_dict", {}).get(dataset, [])
     
